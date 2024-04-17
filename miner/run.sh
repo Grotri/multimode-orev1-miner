@@ -1,1 +1,1 @@
-cargo run --package ore-cli -- --rpc "" --block-engine-url "https://frankfurt.mainnet.block-engine.jito.wtf" --private-key "" --jito-private-key "" --regions "frankfurt" --tip-account "96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5" mine
+ore --rpc "" --block-engine-url "https://mainnet.block-engine.jito.wtf" --private-key "/root/id1.json" --jito-private-key "/root/jito1.json" --regions "frankfurt,amsterdam,ny,tokyo" --tip-account "DfXygSm4jCyNCybVYYK6DwvWqjKee8pbDmJGcLWNDXjh" mine --threads "32"

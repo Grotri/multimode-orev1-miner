@@ -791,9 +791,9 @@ checksum = "a2bd12c1caf447e69cd4528f47f94d203fd2582878ecb9e9465484c4148a8223"
 
 [[package]]
 name = "cached"
-version = "0.46.1"
+version = "0.49.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7c8c50262271cdf5abc979a5f76515c234e764fa025d1ba4862c0f0bcda0e95"
+checksum = "8e8e463fceca5674287f32d252fb1d94083758b8709c160efae66d263e5f4eba"
 dependencies = [
  "ahash 0.8.5",
  "cached_proc_macro",
@@ -806,9 +806,9 @@ dependencies = [
 
 [[package]]
 name = "cached_proc_macro"
-version = "0.18.1"
+version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c878c71c2821aa2058722038a59a67583a4240524687c6028571c9b395ded61f"
+checksum = "ad9f16c0d84de31a2ab7fdf5f7783c14631f7075cf464eb3bb43119f61c9cb2a"
 dependencies = [
  "darling 0.14.4",
  "proc-macro2",
@@ -2548,6 +2548,7 @@ dependencies = [
  "log",
  "ore-program",
  "rand 0.8.5",
+ "solana-account-decoder",
  "solana-cli-config",
  "solana-client",
  "solana-program",

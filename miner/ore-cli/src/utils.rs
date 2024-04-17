@@ -5,10 +5,16 @@ use ore::{
     utils::AccountDeserialize,
     MINT_ADDRESS, PROOF, TREASURY_ADDRESS,
 };
+use std::{collections::HashMap, env, path::PathBuf};
 use solana_client::nonblocking::rpc_client::RpcClient;
-use solana_program::{pubkey::Pubkey, sysvar};
-use solana_sdk::{clock::Clock, commitment_config::CommitmentConfig};
+use solana_program::{sysvar};
+use solana_sdk::{clock::Clock, commitment_config::CommitmentConfig, pubkey::Pubkey, signature::Signature};
 use spl_associated_token_account::get_associated_token_address;
+
+#[cached]
+pub fn get_gpu_nonce_worker_path() -> PathBuf {
+    env::current_exe().unwrap().parent().unwrap().join("nonce-worker-gpu")
+}
 
 pub async fn get_treasury(cluster: String) -> Treasury {
     let client = RpcClient::new_with_commitment(cluster, CommitmentConfig::confirmed());

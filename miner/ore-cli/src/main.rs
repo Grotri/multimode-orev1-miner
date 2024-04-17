@@ -19,22 +19,31 @@ use std::str::FromStr;
 use std::sync::Arc;
 use clap::{command, Parser, Subcommand};
 use solana_program::pubkey::Pubkey;
-use solana_sdk::signature::{Keypair, Signer};
+use solana_sdk::signature::{read_keypair_file, Keypair};
 use tonic::codegen::InterceptedService;
 use tonic::transport::Channel;
 use jito_protos::searcher::searcher_service_client::SearcherServiceClient;
 use jito_searcher_client::{
     get_searcher_client, token_authenticator::ClientInterceptor,
 };
+use std::io::{self, prelude::*, BufReader};
+use std::num::ParseIntError;
+use std::{
+    io::{stdout, Write},
+    fs::File,
+};
 
 struct Miner {
-    pub keypair: Keypair,
+    pub keypairs: Vec<String>,
     pub jito_keypair: Keypair,
     pub priority_fee: u64,
     pub cluster: String,
     pub regions: Vec<String>,
     pub tip_account: Pubkey,
-    pub jito_client: SearcherServiceClient<InterceptedService<Channel, ClientInterceptor>>,
+    pub jito_client_am: SearcherServiceClient<InterceptedService<Channel, ClientInterceptor>>,
+    pub jito_client_fr: SearcherServiceClient<InterceptedService<Channel, ClientInterceptor>>,
+    pub jito_client_ny: SearcherServiceClient<InterceptedService<Channel, ClientInterceptor>>,
+    pub jito_client_tk: SearcherServiceClient<InterceptedService<Channel, ClientInterceptor>>,
 }
 
 #[derive(Parser, Debug)]
@@ -64,7 +73,7 @@ struct Args {
         value_name = "PRIVATE_KEY",
         help = "Private key to use",
     )]
-    private_key: String,
+    private_key: Option<String>,
 
     #[arg(
         long,
@@ -197,14 +206,21 @@ struct UpdateDifficultyArgs {}
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
-    let jito_key_pair = Arc::new(Keypair::from_base58_string(&*args.jito_private_key));
-    let jito_key_pair_1 = Keypair::from_base58_string(&*args.jito_private_key);
-    let ore_key_pair = Keypair::from_base58_string(&*args.private_key);
+    let jito_key_pair = Arc::new(read_keypair_file(&*args.jito_private_key).unwrap());
+    let jito_key_pair_1 = read_keypair_file(&*args.jito_private_key).unwrap();
+    let mut jito_client_am = get_searcher_client(&"https://amsterdam.mainnet.block-engine.jito.wtf", &jito_key_pair).await.expect("jito err");
+    let mut jito_client_fr = get_searcher_client(&"https://frankfurt.mainnet.block-engine.jito.wtf", &jito_key_pair).await.expect("jito err");
+    let mut jito_client_ny = get_searcher_client(&"https://ny.mainnet.block-engine.jito.wtf", &jito_key_pair).await.expect("jito err");
+    let mut jito_client_tk = get_searcher_client(&"https://tokyo.mainnet.block-engine.jito.wtf", &jito_key_pair).await.expect("jito err");
+    // let ore_key_pair = args.private_key;
     let tip_account = Pubkey::from_str(&*args.tip_account).unwrap();
+    let mut keypairs: Vec<String> = Vec::new();
 
-    let client = get_searcher_client(&*args.block_engine_url, &jito_key_pair)
-        .await
-        .expect("connects to searcher client");
+    let keypair_file = File::open("keys.txt").expect("open failed");
+    let keypair_reader = BufReader::new(keypair_file);
+    for keypair_path in keypair_reader.lines() {
+        keypairs.push(keypair_path.unwrap());
+    }
 
     // Initialize miner.
     let cluster = args.rpc;
@@ -214,8 +230,11 @@ async fn main() {
         jito_key_pair_1,
         args.priority_fee,
         args.regions,
-        ore_key_pair,
-        client,
+        keypairs,
+        jito_client_am,
+        jito_client_fr,
+        jito_client_ny,
+        jito_client_tk,
         tip_account,
     ));
 
@@ -255,14 +274,17 @@ async fn main() {
 }
 
 impl Miner {
-    pub fn new(cluster: String, jito_keypair: Keypair, priority_fee: u64, regions: Vec<String>, keypair: Keypair, jito_client: SearcherServiceClient<InterceptedService<Channel, ClientInterceptor>>, tip_account: Pubkey) -> Self {
+    pub fn new(cluster: String, jito_keypair: Keypair, priority_fee: u64, regions: Vec<String>, keypairs: Vec<String>, jito_client_am: SearcherServiceClient<InterceptedService<Channel, ClientInterceptor>>, jito_client_fr: SearcherServiceClient<InterceptedService<Channel, ClientInterceptor>>, jito_client_ny: SearcherServiceClient<InterceptedService<Channel, ClientInterceptor>>, jito_client_tk: SearcherServiceClient<InterceptedService<Channel, ClientInterceptor>>, tip_account: Pubkey) -> Self {
         Self {
-            keypair,
+            keypairs,
             jito_keypair,
             priority_fee,
             cluster,
             regions,
-            jito_client,
+            jito_client_am,
+            jito_client_fr,
+            jito_client_ny,
+            jito_client_tk,
             tip_account
         }
     }
@@ -271,16 +293,31 @@ impl Miner {
         return self.jito_keypair.insecure_clone();
     }
 
-    pub fn signer(&self) -> Keypair {
-        return self.keypair.insecure_clone();
-    }
+    // pub fn signer(&self) -> Keypair {
+    //     match self.keypair.clone() {
+    //         Some(filepath) => read_keypair_file(filepath).unwrap(),
+    //         None => panic!("No keypair provided"),
+    //     }
+    // }
 
     pub fn regions(&self) -> Vec<String> {
         return self.regions.clone();
     }
 
-    pub fn jito_client(&self) -> SearcherServiceClient<InterceptedService<Channel, ClientInterceptor>> {
-        return self.jito_client.clone();
+    pub fn jito_client_am(&self) -> SearcherServiceClient<InterceptedService<Channel, ClientInterceptor>> {
+        return self.jito_client_am.clone();
+    }
+
+    pub fn jito_client_fr(&self) -> SearcherServiceClient<InterceptedService<Channel, ClientInterceptor>> {
+        return self.jito_client_fr.clone();
+    }
+
+    pub fn jito_client_ny(&self) -> SearcherServiceClient<InterceptedService<Channel, ClientInterceptor>> {
+        return self.jito_client_ny.clone();
+    }
+
+    pub fn jito_client_tk(&self) -> SearcherServiceClient<InterceptedService<Channel, ClientInterceptor>> {
+        return self.jito_client_tk.clone();
     }
 
     pub fn tip_account(&self) -> Pubkey {

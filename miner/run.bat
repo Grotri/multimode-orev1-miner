@@ -1,0 +1,1 @@
+cargo run --package ore-cli --rpc "" --block-engine-url "https://frankfurt.mainnet.block-engine.jito.wtf" --private-key "C:/Users/user/.config/solana/id1.json" --jito-private-key "C:/Users/user/.config/solana/id1.json" --regions "frankfurt" --tip-account "96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5" mine --threads 4

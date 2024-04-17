@@ -7,18 +7,18 @@ use crate::{utils::get_proof, Miner};
 
 impl Miner {
     pub async fn rewards(&self, address: Option<String>) {
-        let address = if let Some(address) = address {
-            if let Ok(address) = Pubkey::from_str(&address) {
-                address
-            } else {
-                println!("Invalid address: {:?}", address);
-                return;
-            }
-        } else {
-            self.signer().pubkey()
-        };
-        let proof = get_proof(self.cluster.clone(), address).await;
-        let amount = (proof.claimable_rewards as f64) / 10f64.powf(ore::TOKEN_DECIMALS as f64);
-        println!("{:} ORE", amount);
+        // let address = if let Some(address) = address {
+        //     if let Ok(address) = Pubkey::from_str(&address) {
+        //         address
+        //     } else {
+        //         println!("Invalid address: {:?}", address);
+        //         return;
+        //     }
+        // } else {
+        //     self.signer().pubkey()
+        // };
+        // let proof = get_proof(self.cluster.clone(), address).await;
+        // let amount = (proof.claimable_rewards as f64) / 10f64.powf(ore::TOKEN_DECIMALS as f64);
+        // println!("{:} ORE", amount);
     }
 }
